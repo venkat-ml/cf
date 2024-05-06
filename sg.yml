@@ -1,0 +1,37 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Creating Security Groups for EC2 and RDS communication"
+
+Resources:
+
+  ApacheRangerEC2SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: "Security group for ApacheRanger EC2 Server"
+
+  RDSSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security group for RDS - MySQL instance
+
+  ApacheRangerEC2SecurityGroupEgress:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      Description: "Allow outbound from Apache Ranger EC2 security group to MySQL RDS 3306 port"
+      GroupId: !GetAtt ApacheRangerEC2SecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      DestinationSecurityGroupId: !GetAtt RDSSecurityGroup.GroupId    
+
+  RDSSecurityGroupIngress:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      Description: "Allow inbound to MySQL RDS 3306 port from Apache Ranger EC2 security group"
+      GroupId: !GetAtt RDSSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !GetAtt ApacheRangerEC2SecurityGroup.GroupId
+
+  
