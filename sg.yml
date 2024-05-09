@@ -1,12 +1,13 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 Description: "Creating Security Groups for EC2 and RDS communication for Apache Ranger setup"
+
 Parameters:
   VpcId:
     Default: '/CNS/resources/vpc_id'
     Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: VPC ID of your existing Virtual Private Cloud (VPC)
-    ConstraintDescription: must be the VPC ID of an existing Virtual Private Cloud.
+    Description: "VPC ID of your existing Virtual Private Cloud (VPC)"
+    ConstraintDescription: "Must be the VPC ID of an existing Virtual Private Cloud"
 
 Resources:
   ApacheRangerEC2SecurityGroup:
@@ -36,7 +37,7 @@ Resources:
           ToPort: '8984'
           CidrIp: 10.0.0.0/8
 
-  RDSSecurityGroup:
+  ApacheRangerRDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Security group for RDS - MySQL instance"
@@ -50,14 +51,31 @@ Resources:
       IpProtocol: tcp
       FromPort: 3306
       ToPort: 3306
-      DestinationSecurityGroupId: !GetAtt RDSSecurityGroup.GroupId    
+      DestinationSecurityGroupId: !GetAtt ApacheRangerRDSSecurityGroup.GroupId
 
-  RDSSecurityGroupIngress:
+  ApacheRangerRDSSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: "Allow inbound to MySQL RDS 3306 port from Apache Ranger EC2 security group"
-      GroupId: !GetAtt RDSSecurityGroup.GroupId
+      GroupId: !GetAtt ApacheRangerRDSSecurityGroup.GroupId
       IpProtocol: tcp
       FromPort: 3306
       ToPort: 3306
       SourceSecurityGroupId: !GetAtt ApacheRangerEC2SecurityGroup.GroupId
+
+Outputs:
+  ApacheRangerEC2SecurityGroupID:
+    Description: ApacheRangerEC2SecurityGroup group security GroupId
+    Value: !GetAtt ApacheRangerEC2SecurityGroup.GroupId
+
+  ApacheRangerEC2SecurityVPCID:
+    Description: ApacheRangerEC2SecurityGroup VPC ID
+    Value: !GetAtt ApacheRangerEC2SecurityGroup.VpcId
+
+  ApacheRangerRDSSecurityGroupID:
+    Description: ApacheRangerRDSSecurityGroup group security GroupId
+    Value: !GetAtt ApacheRangerRDSSecurityGroup.GroupId
+
+  ApacheRangerRDSSecurityVPCID:
+    Description: ApacheRangerRDSSecurityGroup VPC ID
+    Value: !GetAtt ApacheRangerRDSSecurityGroup.VpcId  
