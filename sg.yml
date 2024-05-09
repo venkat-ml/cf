@@ -1,21 +1,49 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Creating Security Groups for EC2 and RDS communication"
+Description: "Creating Security Groups for EC2 and RDS communication for Apache Ranger setup"
+Parameters:
+  VpcId:
+    Default: '/CNS/resources/vpc_id'
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: VPC ID of your existing Virtual Private Cloud (VPC)
+    ConstraintDescription: must be the VPC ID of an existing Virtual Private Cloud.
 
 Resources:
-
   ApacheRangerEC2SecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Security group for ApacheRanger EC2 Server"
+      GroupDescription: "Security group for Apache Ranger EC2 server"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: "All inbound to port 6080 for Ranger Admin web UI console over http"
+          IpProtocol: tcp
+          FromPort: '6080'
+          ToPort: '6080'
+          CidrIp: 10.0.0.0/8
+        - Description: "All inbound to port 6182 for Ranger Admin web UI console over https"
+          IpProtocol: tcp
+          FromPort: '6182'
+          ToPort: '6182'
+          CidrIp: 10.0.0.0/8
+        - Description: "All inbound to port 8983 for Solr web UI console over http"
+          IpProtocol: tcp
+          FromPort: '8983'
+          ToPort: '8983'
+          CidrIp: 10.0.0.0/8
+        - Description: "All inbound to port 8984 for Solr web UI console over http"
+          IpProtocol: tcp
+          FromPort: '8984'
+          ToPort: '8984'
+          CidrIp: 10.0.0.0/8
 
   RDSSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group for RDS - MySQL instance
+      GroupDescription: "Security group for RDS - MySQL instance"
+      VpcId: !Ref VpcId
 
   ApacheRangerEC2SecurityGroupEgress:
-    Type: 'AWS::EC2::SecurityGroupEgress'
+    Type: AWS::EC2::SecurityGroupEgress
     Properties:
       Description: "Allow outbound from Apache Ranger EC2 security group to MySQL RDS 3306 port"
       GroupId: !GetAtt ApacheRangerEC2SecurityGroup.GroupId
@@ -25,7 +53,7 @@ Resources:
       DestinationSecurityGroupId: !GetAtt RDSSecurityGroup.GroupId    
 
   RDSSecurityGroupIngress:
-    Type: 'AWS::EC2::SecurityGroupIngress'
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: "Allow inbound to MySQL RDS 3306 port from Apache Ranger EC2 security group"
       GroupId: !GetAtt RDSSecurityGroup.GroupId
@@ -33,5 +61,3 @@ Resources:
       FromPort: 3306
       ToPort: 3306
       SourceSecurityGroupId: !GetAtt ApacheRangerEC2SecurityGroup.GroupId
-
-  
